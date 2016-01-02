@@ -1,5 +1,6 @@
 ﻿#include <iostream>
 #include <stdlib.h>
+#include <string>
 #include <fstream>
 #include "filelib.h"
 #include "tokenscanner.h"
@@ -35,6 +36,13 @@ struct Obstacle{
        return ((point.x >= min_x) && (point.x <= max_x) &&
                (point.y >= min_y) && (point.y <= max_y));
     }
+
+    string toString (){
+        string result = "Obstacle [";
+        result = result + integerToString(corner1.x) + string(", ") + integerToString(corner1.y) + string("]");
+        result += "[" + integerToString(corner2.x) + ", " + integerToString(corner2.y) + "]";
+        return result;
+    }
 };
 
 struct Ray{
@@ -58,27 +66,36 @@ struct Ray{
     }
 
     bool isCrosses(Obstacle& obs){
-        double min_x = ((obs.corner1.x <= obs.corner2.x) ? obs.corner1.x : obs.corner2.x);
-        double max_x = ((obs.corner1.x >= obs.corner2.x) ? obs.corner1.x : obs.corner2.x);
-        double x = min_x;
-        while(x <= max_x){
-             //cout << x << " ";
-             Pt pt;
-             pt.x = x;
-             pt.y = getY(x);
-             if(obs.isContains(pt)){
-                //cout << x << " " << pt.y << endl;
-                return true;
-                break;
-             }
-             //cout << endl;
-             x = x + STEP;
+        double obsMin_x = ((obs.corner1.x <= obs.corner2.x) ? obs.corner1.x : obs.corner2.x);
+        double obsMax_x = ((obs.corner1.x >= obs.corner2.x) ? obs.corner1.x : obs.corner2.x);
+        double x;
+
+        if(isVertical()){
+           x = start.x;
+           if((start.x >= obsMin_x) && (x <= obsMax_x)){
+              return true;
+           }else{
+              return false;
+           }
+        }
+
+        x = obsMin_x;
+        while(x <= obsMax_x){
+            Pt pt;
+            pt.x = x;
+            pt.y = getY(x);
+
+            if(obs.isContains(pt)){
+               return true;
+            }
+
+            x = x + STEP;
          }
          return false;
     }
 };
 
-void loadObstacles(Vector <Obstacle> & vec){
+void readFileAndloadObstacles(Vector <Obstacle> & vec){
     string inputFile = "INPUT.txt";
     /* Prepare input stream object   */
     ifstream infile;
@@ -123,32 +140,67 @@ int  main(){
 
    Vector <Obstacle> obsVec;
 
-   loadObstacles(obsVec);
+   readFileAndloadObstacles(obsVec);
    int noConection = 0;
 
+//   Pt vaska; vaska.x = -46;  vaska.y = -50;
+
+//   mashka.x = -2;
+//   mashka.y = 0;
+
+//   Ray vaskaMashka;
+//   vaskaMashka.start = vaska;
+//   vaskaMashka.finish = mashka;
+
+//   for(Obstacle obs: obsVec){
+//       if(vaskaMashka.isCrosses(obs)){
+//           cout << "CROSSES: " << obs.toString() << endl;
+//       }else{
+//           cout << "NO" << endl;
+//       }
+//   }
+
    for(int row = -1 * AREA_SIZE; row <= AREA_SIZE; row++){
+       if(noConection == obsVec.size()){
+           break;
+       }
+
        for(int col = -1 * AREA_SIZE; col <= AREA_SIZE; col++){
            Pt vaska; vaska.x = col;  vaska.y = row;
-           Ray vaskaMashka;
-           vaskaMashka.start = vaska;
-           vaskaMashka.finish = mashka;
+
            Ray vaskaLenka;
            vaskaLenka.start = vaska;
            vaskaLenka.finish = lenka;
 
+           Ray vaskaMashka;
+           vaskaMashka.start = vaska;
+           vaskaMashka.finish = mashka;
+
            for(Obstacle obs: obsVec){
-               if(!vaskaMashka.isCrosses(obs) && (!vaskaLenka.isCrosses(obs)))
-                noConection++;
+               if((!(vaskaMashka.isCrosses(obs))) && (!(vaskaLenka.isCrosses(obs)))){
+//                   cout << "Mashka [" << mashka.x << ", " << mashka.y <<
+//                           "] Lenka[" << lenka.x << ", " << lenka.y << "]" << endl;
+
+                   noConection++;
+
+                    if(noConection == obsVec.size()){
+                        cout << "Mashka [" << mashka.x << ", " << mashka.y <<
+                                "] Lenka[" << lenka.x << ", " << lenka.y << "]" << endl;
+
+                        cout << "YES! x = " << col << " y = " << row << endl;
+                        break;
+                    }
+               }
            }
 
-           if(noConection == obsVec.size()){
-                cout << "YES! x = " << col << " y = " << row << endl;
-                break;
-           }
+
        }
+
    }
 
-
+   if(noConection < obsVec.size()){
+        cout << "NO" << endl;
+   }
 
    return 0;
 }
